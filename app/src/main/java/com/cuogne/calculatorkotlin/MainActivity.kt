@@ -47,22 +47,27 @@ class MainActivity : AppCompatActivity() {
         val expression = findViewById<TextView>(id.expression)
         val result = findViewById<TextView>(id.result)
         val delOne = findViewById<Button>(id.delete_one)
-        val delAll = findViewById<Button>(id.delete_all)
 
         numberButtons.forEachIndexed { index, button ->
+
             button.setOnClickListener {
-                expression?.append(index.toString())
+                if (result?.text.toString().startsWith("0")){
+                    result?.text = index.toString()
+                }
+                else result?.append(index.toString())
             }
         }
 
         operators.forEach { button ->
             button.setOnClickListener {
-                expression?.append(button.text)
+                result?.append(button.text)
             }
         }
 
         equal.setOnClickListener {
-            val expressionStr = expression?.text.toString()
+            val expressionStr = result?.text.toString()
+            expression?.text = expressionStr
+
             val expressionList: List<String> = handleExpression(expressionStr) // [1, +, 2, *, 3]
 
             val calculationResult: Double = rpnResult(shuntingYardAlgorithm(expressionList))
@@ -71,19 +76,19 @@ class MainActivity : AppCompatActivity() {
             } else {
                  result.text = calculationResult.toString()
             }
-//            result.text = shuntingYardAlgorithm(expressionList).toString()
         }
 
         delOne.setOnClickListener {
-            if (result.text != ""){
-                result.text = ""
+            if (expression?.text?.isNotEmpty() == true){
+                expression.text = ""
+                result.text = "0"
             }
-            expression?.text = expression.text.toString().dropLast(1)
-        }
-
-        delAll.setOnClickListener {
-            expression?.text = ""
-            result?.text = ""
+            else {
+                result?.text = result.text?.dropLast(1)
+                if (result?.text?.isEmpty() == true){
+                    result.text = "0"
+                }
+            }
         }
     }
 
