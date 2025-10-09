@@ -3,10 +3,13 @@ package com.cuogne.calculatorkotlin
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
+import android.view.View
+import android.widget.HorizontalScrollView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.widget.addTextChangedListener
 import com.cuogne.calculatorkotlin.R.*
 
 class MainActivity : AppCompatActivity() {
@@ -38,7 +41,7 @@ class MainActivity : AppCompatActivity() {
             findViewById<Button>(id.subtract),
             findViewById<Button>(id.multiply),
             findViewById<Button>(id.divide),
-//            findViewById<Button>(id.point),
+            findViewById<Button>(id.point),
             findViewById<Button>(id.parentheses_open),
             findViewById<Button>(id.parentheses_close),
         )
@@ -48,8 +51,10 @@ class MainActivity : AppCompatActivity() {
         val result = findViewById<TextView>(id.result)
         val delOne = findViewById<Button>(id.delete_one)
 
-        numberButtons.forEachIndexed { index, button ->
+        val expressionScroll = findViewById<HorizontalScrollView>(R.id.expression_scroll)
+        val resultScroll = findViewById<HorizontalScrollView>(R.id.result_scroll)
 
+        numberButtons.forEachIndexed { index, button ->
             button.setOnClickListener {
                 if (result?.text.toString().startsWith("0")){
                     result?.text = index.toString()
@@ -76,6 +81,11 @@ class MainActivity : AppCompatActivity() {
             } else {
                  result.text = calculationResult.toString()
             }
+        }
+
+        result?.addTextChangedListener {
+            resultScroll.post { resultScroll.fullScroll(View.FOCUS_RIGHT) }
+            expressionScroll.post { expressionScroll.fullScroll(View.FOCUS_RIGHT) }
         }
 
         delOne.setOnClickListener {
