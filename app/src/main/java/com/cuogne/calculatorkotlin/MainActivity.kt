@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
 
         numberButtons.forEachIndexed { index, button ->
             button.setOnClickListener {
-                if (result?.text.toString().startsWith("0")){
+                if (result?.text.toString() == "0"){
                     result?.text = index.toString()
                 }
                 else result?.append(index.toString())
@@ -74,13 +74,19 @@ class MainActivity : AppCompatActivity() {
             expression?.text = expressionStr
 
             val expressionList: List<String> = handleExpression(expressionStr) // [1, +, 2, *, 3]
+            val calculationResult: Double? =
+                try {
+                    rpnResult(shuntingYardAlgorithm(expressionList))
+                } catch (e: Exception) {
+                    null
+                }
 
-            val calculationResult: Double = rpnResult(shuntingYardAlgorithm(expressionList))
-            if (calculationResult % 1 == 0.0) {
-                 result.text = calculationResult.toInt().toString()
-            } else {
-                 result.text = calculationResult.toString()
-            }
+            result.text = calculationResult?.let {
+               if (it % 1 == 0.0){
+                   it.toInt().toString()
+               }
+               else it.toString()
+            } ?: "Error"
         }
 
         result?.addTextChangedListener {
