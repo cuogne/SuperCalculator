@@ -36,7 +36,7 @@ android {
 }
 
 dependencies {
-
+    implementation(libs.exp4j)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

@@ -11,6 +11,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.addTextChangedListener
 import com.cuogne.calculatorkotlin.R.*
+import net.objecthunter.exp4j.ExpressionBuilder
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,23 +71,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         equal.setOnClickListener {
-            val expressionStr = result?.text.toString()
-            expression?.text = expressionStr
-
-            val expressionList: List<String> = handleExpression(expressionStr) // [1, +, 2, *, 3]
-            val calculationResult: Double? =
-                try {
-                    rpnResult(shuntingYardAlgorithm(expressionList))
-                } catch (e: Exception) {
-                    null
+            val expressionStr = result.text.toString()
+            expression.text = expressionStr
+            try {
+                val resultValue = ExpressionBuilder(expressionStr).build().evaluate()
+                if (resultValue % 1 == 0.0) {
+                    result.text = resultValue.toInt().toString()
                 }
-
-            result.text = calculationResult?.let {
-               if (it % 1 == 0.0){
-                   it.toInt().toString()
-               }
-               else it.toString()
-            } ?: "Error"
+                else result.text = resultValue.toString()
+            } catch (e: Exception) {
+                result.text = "Error"
+            }
         }
 
         result?.addTextChangedListener {
@@ -106,110 +101,5 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-    }
-
-    private fun handleExpression(expression: String): List<String> {
-        val tokens = mutableListOf<String>()
-        val curNum = StringBuilder()
-
-        expression.forEach{char ->
-            if (char.isDigit()){
-                curNum.append(char)
-            }
-            else {
-                if (curNum.isNotEmpty()){
-                    tokens.add(curNum.toString())
-                    curNum.clear()
-                }
-                tokens.add(char.toString())
-            }
-        }
-
-        if (curNum.isNotEmpty()){
-            tokens.add(curNum.toString())
-        }
-        return tokens
-    }
-
-
-    // https://tylerpexton-70687.medium.com/the-shunting-yard-algorithm-b840844141b2
-    // https://brilliant.org/wiki/shunting-yard-algorithm/
-    private fun shuntingYardAlgorithm(expressionList: List<String>): List<String> {
-        val outputQueue = mutableListOf<String>()
-        val operatorStack = mutableListOf<String>()
-
-        val precedence = mapOf(
-            "+" to 1,
-            "-" to 1,
-            "*" to 2,
-            "/" to 2
-        )
-
-        expressionList.forEach { token ->
-            when {
-                token.toIntOrNull() != null -> {
-                    outputQueue.add(token)
-                }
-
-                token == "(" -> operatorStack.add(token)
-
-                token == ")" -> {
-                    while (operatorStack.last() != "(" && operatorStack.isNotEmpty()) {
-                        outputQueue.add(operatorStack.removeAt(operatorStack.size - 1))
-                    }
-                    if (operatorStack.isNotEmpty()){
-                        operatorStack.removeAt(operatorStack.size - 1)
-                    }
-                }
-
-                token in precedence.keys -> {
-                    while (
-                        operatorStack.isNotEmpty() &&
-                        operatorStack.last() in precedence.keys &&
-                        precedence[token]!! <= precedence[operatorStack.last()]!!
-                    )
-                    {
-                        // removeLast() requires API level 35
-                        outputQueue.add(operatorStack.removeAt(operatorStack.size - 1))
-                    }
-                    operatorStack.add(token)
-                }
-            }
-        }
-
-        while (operatorStack.isNotEmpty()){
-            outputQueue.add(operatorStack.removeAt(operatorStack.size - 1))
-        }
-
-        // return a list of reverse polish notation
-        return outputQueue
-    }
-
-    private fun rpnResult(rpnList: List<String>): Double {
-        val rpnStack = mutableListOf<Double>()
-
-        rpnList.forEach {token ->
-            when {
-                token.toIntOrNull() != null -> {
-                    rpnStack.add(token.toDouble())
-                }
-
-                token in listOf("+", "-", "*", "/") -> {
-                    val a = rpnStack.removeAt(rpnStack.size - 1)
-                    val b = rpnStack.removeAt(rpnStack.size - 1)
-                    when (token) {
-                        "+" -> rpnStack.add(b + a)
-                        "-" -> rpnStack.add(b - a)
-                        "*" -> rpnStack.add(b * a)
-                        "/" -> {
-                            if (a != 0.0) rpnStack.add(b / a)
-                            else throw ArithmeticException("Division by zero")
-                        }
-                        else -> throw IllegalArgumentException("Invalid operator: $token")
-                    }
-                }
-            }
-        }
-        return rpnStack.last()
     }
 }
